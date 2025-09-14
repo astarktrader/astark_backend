@@ -1,8 +1,19 @@
 import express from "express";
 import WebSocket from "ws";
+import cors from "cors"; // <-- Import CORS
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// --- CORS setup ---
+const FRONTEND_URL = "https://your-netlify-site.netlify.app"; // <-- replace with your Netlify URL
+app.use(cors({
+  origin: FRONTEND_URL,
+  methods: ["GET", "POST"]
+}));
+
+// Enable JSON parsing (optional, but good if you add POST endpoints)
+app.use(express.json());
 
 // Your Deriv API Token (set in Render Environment Variables)
 const API_TOKEN = process.env.DERIV_API_TOKEN;
@@ -43,6 +54,7 @@ app.get("/", (req, res) => {
   res.send("🚀 Astark Backend is running and connected to Deriv API!");
 });
 
+// --- Start server ---
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
