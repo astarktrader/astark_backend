@@ -1,60 +1,31 @@
 import express from "express";
 import WebSocket from "ws";
-import cors from "cors"; // <-- Import CORS
+import dotenv from "dotenv";
+import cors from "cors";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- CORS setup ---
-const FRONTEND_URL = "https://your-netlify-site.netlify.app"; // <-- replace with your Netlify URL
-app.use(cors({
-  origin: FRONTEND_URL,
-  methods: ["GET", "POST"]
-}));
+app.use(cors()); // allow frontend requests
 
-// Enable JSON parsing (optional, but good if you add POST endpoints)
-app.use(express.json());
-
-// Your Deriv API Token (set in Render Environment Variables)
+// Deriv API Token (from Render Environment Variables)
 const API_TOKEN = process.env.DERIV_API_TOKEN;
+
+if (!API_TOKEN) {
+  console.error("❌ DERIV_API_TOKEN not set!");
+  process.exit(1);
+}
 
 // Create WebSocket connection to Deriv
 const ws = new WebSocket("wss://ws.binaryws.com/websockets/v3?app_id=1089");
 
-ws.on("open", () => {
-  console.log("🔗 Connected to Deriv API WebSocket");
-
-  // Authorize with API token
-  ws.send(JSON.stringify({ authorize: API_TOKEN }));
-});
-
-ws.on("message", (msg) => {
-  const data = JSON.parse(msg.toString());
-
-  if (data.msg_type === "authorize") {
-    console.log(`✅ Authorized as: ${data.authorize.loginid}`);
-  }
-
-  // Handle contract responses (mock for now)
-  if (data.msg_type === "proposal") {
-    console.log("📩 Proposal received:", data.proposal);
-  }
-
-  if (data.msg_type === "buy") {
-    console.log("🟢 Trade sent. Contract ID:", data.buy.contract_id);
-  }
-
-  if (data.msg_type === "proposal_open_contract") {
-    console.log("🔵 Contract update:", data.proposal_open_contract);
-  }
-});
-
-// Simple API route for testing
+// Simple endpoint for health check
 app.get("/", (req, res) => {
-  res.send("🚀 Astark Backend is running and connected to Deriv API!");
+  res.send("✅ ASTARK Backend is running and connected to Deriv API!");
 });
 
-// --- Start server ---
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
